@@ -1,0 +1,33 @@
+network:
+  host: 127.0.0.1
+  port: 8088
+  disable_auth: true
+  api_servers: ["OAI"]
+
+model:
+  model_dir: E:\flash-next
+  model_name: Qwen3.8-Flash-Next-exl3-3.05bpw
+
+  backend: exllamav3
+
+  max_seq_len: 81920
+  cache_size: 81920
+  cache_mode: FP16
+
+  cpu_moe_offload_layers: 999
+  ngram_ram: false
+
+  chunk_size: 2048
+  output_chunking: true
+  max_batch_size: 1
+
+  reasoning: true
+  start_in_reasoning: auto
+  tool_calls_in_reasoning: true
+  tool_format: qwen3_coder
+
+sampling:
+  override_preset: safe_defaults
+
+memory:
+  sysmem_kv_cache: 2048
