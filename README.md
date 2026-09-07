@@ -4,7 +4,7 @@ Run **Qwen3.8-Flash-Next EXL3** as a local agent backend for **Hermes Agent** us
 
 This repository documents a tested Windows deployment path for turning a locally quantized Qwen3.8-Flash-Next model from a normal chat model into a functional local agent backend with structured `tool\_calls`.
 
-\## Why this repository exists
+## Why this repository exists
 
 Running a model through an OpenAI-compatible `/v1/chat/completions` endpoint does \*\*not\*\* automatically mean the server supports OpenAI-compatible tool calling.
 
