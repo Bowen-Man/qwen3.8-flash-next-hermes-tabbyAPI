@@ -1,4 +1,4 @@
-# Qwen3.8-Flash-Next + Hermes Agent via TabbyAPI
+# Qwen3.8-Flash-Next + Hermes Agent via ExLlamaV3 + TabbyAPI
 
 **English** | [简体中文](README.zh-CN.md)
 
