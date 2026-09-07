@@ -399,3 +399,22 @@ Agent
 本仓库关注 Windows + 消费级 NVIDIA GPU 上，Qwen3.8-Flash-Next EXL3 作为 Hermes Agent 本地后端的一条可复现部署路线。
 
 重点是 structured tool calling、heterogeneous memory、长上下文运行和可复现 benchmark。不同硬件上的最优 cache/offload 参数会不同。
+
+
+
+## 许可证
+
+本仓库中原创的代码和文档采用 [MIT License](LICENSE)。
+
+本项目依赖或集成的第三方软件及模型权重仍分别受其原许可证约束：
+
+- Qwen3.8-Flash-Next 及其 EXL3 量化权重：
+  Qwen Community License 1.0
+- TabbyAPI：
+  GNU Affero General Public License v3.0 (AGPL-3.0)
+- ExLlamaV3：
+  MIT License
+- Hermes Agent：
+  MIT License
+
+本仓库的 MIT License 不会替代或修改上述第三方项目和模型权重的许可证。
