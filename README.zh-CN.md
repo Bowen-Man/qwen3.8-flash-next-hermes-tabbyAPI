@@ -50,7 +50,7 @@ Finish reason: tool_calls
 PASS: Structured tool calling works.
 ```
 
-最后，在 Hermes 中配置：
+最后，在 Hermes `hermes model` 中配置：
 
 ```text
 Provider:              Custom endpoint
