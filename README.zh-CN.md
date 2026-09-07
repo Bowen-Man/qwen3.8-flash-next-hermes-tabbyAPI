@@ -2,7 +2,7 @@
 
 [English](README.md) | **简体中文**
 
-使用 **ExLlamaV3 + TabbyAPI**，在消费级 NVIDIA GPU（RTX 5070 VRAM 12G） 上将 **Qwen3.8-Flash-Next EXL3** 作为 **Hermes Agent** 的本地推理后端，并支持原生 OpenAI 兼容的结构化工具调用（`tool_calls`）。
+使用 **ExLlamaV3 + TabbyAPI**，在消费级 NVIDIA GPU 上将 **Qwen3.8-Flash-Next EXL3** 作为 **Hermes Agent** 的本地推理后端，并支持原生 OpenAI 兼容的结构化工具调用（`tool_calls`）。
 
 本仓库记录了一条经过实际验证的 Windows 部署路径：把本地量化的 Qwen3.8-Flash-Next 从“能正常聊天的本地模型”，进一步接成一个能够向 Hermes Agent 返回结构化 `tool_calls` 的本地 Agent 后端。
 
@@ -10,7 +10,7 @@
 
 完整安装指南：
 
-[`docs/installation.md`](docs/installation.md)
+[`docs/installation.zh-CN.md`](docs/installation.zh-CN.md)
 
 整体部署流程：
 
@@ -69,7 +69,7 @@ Maximum output tokens: 16384
 
 ### 安装
 
-[`docs/installation.md`](docs/installation.md)
+[`docs/installation.zh-CN.md`](docs/installation.zh-CN.md)
 
 完整的 Windows 部署链路：
 
@@ -114,7 +114,7 @@ OpenAI client
 
 ### 故障排查
 
-[`docs/troubleshooting.md`](docs/troubleshooting.md)
+[`docs/troubleshooting.zh-CN.md`](docs/troubleshooting.zh-CN.md)
 
 目前记录的常见问题包括：
 
@@ -288,7 +288,9 @@ memory:
 │   └── test_tool_call.py
 └── docs/
     ├── installation.md
-    └── troubleshooting.md
+    ├── installation.zh-CN.md
+    ├── troubleshooting.md
+    └── troubleshooting.zh-CN.md
 ```
 
 ## 当前状态
