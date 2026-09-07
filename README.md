@@ -45,7 +45,7 @@ Finish reason: tool_calls
 PASS: Structured tool calling works.
 ```
 
-Finally, configure Hermes with:
+Finally, configure Hermes `hermes model` with:
 ```text
 Provider:              Custom endpoint
 API compatibility:     Chat Completions
