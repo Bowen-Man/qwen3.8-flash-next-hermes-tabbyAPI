@@ -81,6 +81,8 @@ Finally run the real Agent-side tool test:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\test_hermes_tool.ps1
+# or
+Unblock-File .\scripts\test_hermes_tool.ps1
 ```
 
 ---
@@ -164,6 +166,7 @@ OpenAI client
 ```
 
 [`scripts/test_hermes_tool.ps1`](scripts/test_hermes_tool.ps1) verifies the next layer by forcing Hermes to read an unpredictable UUID from a temporary file.
+(After `Unblock-File .\scripts\test_hermes_tool.ps1` / `powershell -ExecutionPolicy Bypass -File .\scripts\test_hermes_tool.ps1`)
 
 ### Troubleshooting
 
