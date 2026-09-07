@@ -1,5 +1,6 @@
 # Qwen3.8-Flash-Next + Hermes Agent via TabbyAPI
 
+[**English**](README.md) | [简体中文](README.zh-CN.md)
 Run **Qwen3.8-Flash-Next EXL3** as a local agent backend for **Hermes Agent** using **ExLlamaV3 + TabbyAPI**, with native OpenAI-compatible tool calling on a consumer NVIDIA GPU.
 
 This repository documents a tested Windows deployment path for turning a locally quantized Qwen3.8-Flash-Next model from a normal chat model into a functional local agent backend with structured `tool_calls`.
