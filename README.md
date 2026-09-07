@@ -22,7 +22,7 @@ while silently ignoring:
 tools
 tool\_choice
 tool\_calls
-``
+```
 
 In our initial setup, Qwen3.8-Flash-Next could reason that a tool should be used, but Hermes reported:
 ```text
