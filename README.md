@@ -2,11 +2,11 @@
 
 Run **Qwen3.8-Flash-Next EXL3** as a local agent backend for **Hermes Agent** using **ExLlamaV3 + TabbyAPI**, with native OpenAI-compatible tool calling on a consumer NVIDIA GPU.
 
-This repository documents a tested Windows deployment path for turning a locally quantized Qwen3.8-Flash-Next model from a normal chat model into a functional local agent backend with structured `tool\_calls`.
+This repository documents a tested Windows deployment path for turning a locally quantized Qwen3.8-Flash-Next model from a normal chat model into a functional local agent backend with structured `tool_calls`.
 
 ## Why this repository exists
 
-Running a model through an OpenAI-compatible `/v1/chat/completions` endpoint does \*\*not\*\* automatically mean the server supports OpenAI-compatible tool calling.
+Running a model through an OpenAI-compatible `/v1/chat/completions` endpoint does **not** automatically mean the server supports OpenAI-compatible tool calling.
 
 A minimal inference server may successfully handle:
 
@@ -20,8 +20,8 @@ while silently ignoring:
 
 ```text
 tools
-tool\_choice
-tool\_calls
+tool_choice
+tool_calls
 ```
 
 In our initial setup, Qwen3.8-Flash-Next could reason that a tool should be used, but Hermes reported:
@@ -34,30 +34,30 @@ The missing layer was the serving stack.
 With TabbyAPI and:
 
 ```yaml
-tool\_format: qwen3\_coder
+tool_format: qwen3_coder
 ```
 
 the complete path becomes:
 
 ```text
 Hermes Agent
-&#x20;   ↓
+   ↓
 OpenAI Chat Completions API
-&#x20;   ↓
+   ↓
 TabbyAPI
-&#x20;   ↓
+   ↓
 Qwen tool schema / chat template
-&#x20;   ↓
+   ↓
 ExLlamaV3
-&#x20;   ↓
+   ↓
 Qwen3.8-Flash-Next
-&#x20;   ↓
-qwen3\_coder tool-call output
-&#x20;   ↓
+   ↓
+qwen3_coder tool-call output
+   ↓
 TabbyAPI parser
-&#x20;   ↓
-OpenAI tool\_calls
-&#x20;   ↓
+   ↓
+OpenAI tool_calls
+   ↓
 Hermes executes the tool
 ```
 ## Tested setup
