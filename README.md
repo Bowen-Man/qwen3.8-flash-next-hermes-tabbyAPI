@@ -71,7 +71,7 @@ RAM:         96 GB
 Model:       Qwen3.8-Flash-Next EXL3 3.05 bpw
 Inference:   ExLlamaV3
 API server:  TabbyAPI
-Agent:Hermes Agent
+Agent:       Hermes Agent
 ```
 This is a **tested configuration**, not a statement of minimum hardware requirements.
 
@@ -98,16 +98,15 @@ NVMe SSD
 Current tested configuration:
 
 ```yaml
-max\_seq\_len: 81920
-cache\_size: 81920
-cache\_mode: FP16
+max_seq_len: 81920
+cache_size: 81920
+cache_mode: FP16
 
-cpu\_moe\_offload\_layers: 999
-ngram\_ram: false
+cpu_moe_offload_layers: 999
+ngram_ram: false
 
 memory:
-
-&#x20; sysmem\_kv\_cache: 2048
+   sysmem_kv_cache: 2048
 
 ```
 
@@ -124,9 +123,9 @@ Actual memory consumption depends on the GPU driver, CUDA runtime, ExLlamaV3 ver
 ├── config/
 │   └── config.example.yml
 ├── scripts/
-│   └── test\_tool\_call.py
+│   └── test_tool_call.py
 └── docs/
-&#x20;   └── troubleshooting.md
+     └── troubleshooting.md
 
 ```
 ## Status
