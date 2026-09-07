@@ -400,3 +400,25 @@ Repository code/documentation are provided under the license in [`LICENSE`](LICE
 This repository focuses on a reproducible Windows + consumer NVIDIA GPU deployment path for Qwen3.8-Flash-Next EXL3 as a local Hermes Agent backend.
 
 It documents a tested integration with particular emphasis on structured tool calling, heterogeneous memory, long-context operation and reproducible local benchmarking. Hardware requirements and optimal cache/offload settings vary between systems.
+
+
+
+## License
+
+Original code and documentation in this repository are released under the
+[MIT License](LICENSE).
+
+This repository integrates with third-party software and model weights that
+remain subject to their respective licenses:
+
+- Qwen3.8-Flash-Next and its EXL3 quantized weights:
+  Qwen Community License 1.0
+- TabbyAPI:
+  GNU Affero General Public License v3.0 (AGPL-3.0)
+- ExLlamaV3:
+  MIT License
+- Hermes Agent:
+  MIT License
+
+The MIT license of this repository does not replace or modify the licenses
+of these upstream projects or model weights.
