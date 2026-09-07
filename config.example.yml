@@ -1,0 +1,53 @@
+network:
+  # This example intentionally binds only to localhost.
+  # Do not expose disable_auth: true on 0.0.0.0 or a public network.
+  host: 127.0.0.1
+  port: 8088
+  disable_auth: true
+  api_servers: ["OAI"]
+
+model:
+  model_dir: E:\flash-next
+  model_name: Qwen3.8-Flash-Next-exl3-3.05bpw
+
+  backend: exllamav3
+
+  max_seq_len: 81920
+  cache_size: 81920
+  cache_mode: FP16
+
+  tensor_parallel: false
+  gpu_split_auto: true
+  autosplit_reserve: [96]
+
+  # Offload all eligible MoE expert layers on the tested 12 GB GPU setup.
+  cpu_moe_offload_layers: 999
+
+  # Keep Qwen's n-gram data storage-backed rather than fully resident in RAM.
+  ngram_ram: false
+
+  chunk_size: 2048
+  output_chunking: true
+  max_batch_size: 1
+
+  reasoning: true
+  start_in_reasoning: auto
+  tool_calls_in_reasoning: true
+  tool_format: qwen3_coder
+
+sampling:
+  override_preset: safe_defaults
+
+memory:
+  # Known-good reference on RTX 5070 12 GB + ~96 GB RAM.
+  # This is NOT a universal optimum. Benchmark your own workload.
+  sysmem_recurrent_cache: 10240
+  sysmem_kv_cache: 4096
+  sysmem_multimodal_cache: 1024
+
+  # Enabled in the current tested reference. If you encounter intermittent
+  # CUDA OOM / allocator instability, benchmark again with false.
+  cuda_malloc_async: true
+
+developer:
+  disable_request_streaming: false
