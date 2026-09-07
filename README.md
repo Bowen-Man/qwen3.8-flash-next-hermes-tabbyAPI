@@ -4,6 +4,140 @@ Run **Qwen3.8-Flash-Next EXL3** as a local agent backend for **Hermes Agent** us
 
 This repository documents a tested Windows deployment path for turning a locally quantized Qwen3.8-Flash-Next model from a normal chat model into a functional local agent backend with structured `tool_calls`.
 
+## Quick Start
+
+The complete installation guide is available in:
+
+[`docs/installation.md`](docs/installation.md)
+
+The deployment process is:
+```text
+1. Prepare a Qwen3.8-Flash-Next EXL3 model
+2. Install TabbyAPI + ExLlamaV3
+3. Copy and edit config/config.example.yml
+4. Start TabbyAPI
+5. Verify structured tool calling
+6. Connect Hermes Agent
+7. Verify real tool execution
+```
+Once TabbyAPI is installed and configured, start the server with:
+
+```powershell
+cd E:\tabbyAPI
+& ".\venv\Scripts\python.exe" .\main.py
+```
+
+Verify that the API is running:
+```powershell
+curl.exe http://127.0.0.1:8088/v1/models
+```
+
+Then verify native structured tool calling:
+```powershell
+python scripts/test_tool_call.py
+```
+
+A successful result should contain:
+```text
+Finish reason: tool_calls
+PASS: Structured tool calling works.
+```
+
+Finally, configure Hermes with:
+```text
+Provider:              Custom endpoint
+API compatibility:     Chat Completions
+Base URL:              http://127.0.0.1:8088/v1
+Model:                 Qwen3.8-Flash-Next-exl3-3.05bpw
+Context length:        81920
+Maximum output tokens: 16384
+```
+
+For the full procedure, including Python/CUDA setup and the final Hermes file-tool integration test, see the installation guide.
+
+---
+
+## Documentation
+### Installation
+[`docs/installation.md`](docs/installation.md)
+
+Complete Windows setup from:
+```text
+EXL3 model
+→ ExLlamaV3
+→ TabbyAPI
+→ structured tool_calls
+→ Hermes Agent
+```
+Use this if you are setting up the stack for the first time.
+
+### Configuration
+[`config/config.example.yml`](config/config.example.yml)
+
+A tested TabbyAPI configuration for:
+* 81,920-token context
+* FP16 KV cache
+* CPU MoE offloading
+* disk-backed n-gram embeddings
+* 2 GB system-memory second-tier KV cache
+* `qwen3_coder` tool parsing
+
+### Tool-call verification
+[`scripts/test_tool_call.py`](scripts/test_tool_call.py)
+
+Tests:
+```text
+OpenAI client
+→ TabbyAPI
+→ Qwen3.8-Flash-Next
+→ qwen3_coder parser
+→ structured OpenAI tool_calls
+```
+
+This deliberately bypasses Hermes so that the model-serving layer can be tested independently.
+
+### Troubleshooting
+
+[`docs/troubleshooting.md`](docs/troubleshooting.md)
+
+Covers common problems including:
+* localhost requests being routed through a proxy;
+* `curl` working while Python fails;
+* chat working but `tool_calls` remaining empty;
+* `uv` installing into the wrong Python environment;
+* large Torch wheel TLS failures;
+* Hermes context / `max_tokens` conflicts;
+* CPU MoE and KV-cache memory behavior.
+
+---
+
+## Recommended validation order
+Do not debug the complete Agent stack at once.
+Use this sequence:
+```text
+GPU / CUDA
+    ↓
+Torch
+    ↓
+ExLlamaV3
+    ↓
+TabbyAPI model loading
+    ↓
+/v1/models
+    ↓
+scripts/test_tool_call.py
+    ↓
+Hermes normal chat
+    ↓
+Hermes real tool execution
+```
+If:
+```text
+test_tool_call.py = PASS
+```
+but Hermes still cannot execute tools, the model-serving layer is already working, and the remaining problem is likely in the Hermes configuration or Agent loop.
+
+
 ## Why this repository exists
 
 Running a model through an OpenAI-compatible `/v1/chat/completions` endpoint does **not** automatically mean the server supports OpenAI-compatible tool calling.
@@ -119,13 +253,15 @@ Actual memory consumption depends on the GPU driver, CUDA runtime, ExLlamaV3 ver
 ```text
 .
 ├── README.md
+├── LICENSE
 ├── .gitignore
 ├── config/
 │   └── config.example.yml
 ├── scripts/
 │   └── test_tool_call.py
 └── docs/
-     └── troubleshooting.md
+    ├── installation.md
+    └── troubleshooting.md
 
 ```
 ## Status
@@ -170,9 +306,14 @@ Agent
 
 ```
 
-## Next
 
-Detailed installation instructions, configuration, tool-call verification and troubleshooting will be added to this repository.
 
+## Project scope
+
+This repository focuses on a reproducible **Windows + consumer NVIDIA GPU** deployment path for Qwen3.8-Flash-Next EXL3 as a local Hermes Agent backend.
+
+It is not a replacement for TabbyAPI, ExLlamaV3, Qwen or Hermes. It documents a tested integration of these projects, with particular emphasis on structured tool calling and low-VRAM heterogeneous inference.
+
+Hardware requirements and optimal cache/offload settings will vary between systems.
 
 
