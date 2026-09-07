@@ -1,56 +1,72 @@
-# Qwen3.8-Flash-Next + Hermes Agent via ExLlamaV3 + TabbyAPI
+# Qwen3.8-Flash-Next + Hermes Agent via TabbyAPI
 
 [English](README.md) | **简体中文**
 
-使用 **ExLlamaV3 + TabbyAPI**，在消费级 NVIDIA GPU（RTX 5070 VRAM 12G）上将 **Qwen3.8-Flash-Next EXL3** 作为 **Hermes Agent** 的本地推理后端，并支持原生 OpenAI 兼容的结构化工具调用（`tool_calls`）。
+使用 **ExLlamaV3 + TabbyAPI**，把 **Qwen3.8-Flash-Next EXL3** 作为 **Hermes Agent** 的本地后端，并在消费级 NVIDIA GPU 上获得原生 OpenAI-compatible 结构化 tool calling。
 
-本仓库记录了一条经过实际验证的 Windows 部署路径：把本地量化的 Qwen3.8-Flash-Next 从“能正常聊天的本地模型”，进一步接成一个能够向 Hermes Agent 返回结构化 `tool_calls` 的本地 Agent 后端。
+本仓库记录的是一条已经实际跑通的 **Windows + 消费级 NVIDIA GPU** 部署路线。参考机器为 **RTX 5070 12 GB + 96 GB RAM**，模型为 **Qwen3.8-Flash-Next EXL3 3.05 bpw**。
+
+> 本仓库中的配置是 **known-good reference**，不是全局最优参数。cache/offload 应该在你自己的硬件和目标 context length 上实测。
+
+## 已验证内容
+
+- Qwen3.8-Flash-Next EXL3 + ExLlamaV3 推理；
+- TabbyAPI OpenAI-compatible `/v1/chat/completions`；
+- 81,920-token context + FP16 primary KV cache；
+- CPU MoE expert offload + NVMe-backed n-gram 数据；
+- `tool_format: qwen3_coder` 结构化 OpenAI `tool_calls`；
+- Hermes Agent 真实工具执行；
+- 可复现的 32K / 64K 长上下文与 cache-reuse benchmark。
+
+---
 
 ## 快速开始
 
-完整安装指南：
+完整安装文档：
 
 [`docs/installation.zh-CN.md`](docs/installation.zh-CN.md)
 
-整体部署流程：
+部署流程：
 
 ```text
 1. 准备 Qwen3.8-Flash-Next EXL3 模型
 2. 安装 TabbyAPI + ExLlamaV3
 3. 复制并修改 config/config.example.yml
 4. 启动 TabbyAPI
-5. 验证结构化 tool calling
-6. 连接 Hermes Agent
-7. 验证真实工具执行
+5. 验证 structured tool calling
+6. 接入 Hermes Agent
+7. 验证 Hermes 真实执行工具
+8. benchmark 自己的硬件
 ```
 
-TabbyAPI 安装和配置完成后，启动服务：
+启动 TabbyAPI：
 
 ```powershell
 cd E:\tabbyAPI
 & ".\venv\Scripts\python.exe" .\main.py
 ```
 
-验证 API 是否已经启动：
+验证 API：
 
 ```powershell
 curl.exe http://127.0.0.1:8088/v1/models
 ```
 
-然后验证原生结构化工具调用：
+验证结构化 tool calling。如果系统 Python 没有 OpenAI SDK，可直接使用 Hermes 的 Python：
 
 ```powershell
-python scripts/test_tool_call.py
+& "$env:LOCALAPPDATA\hermes\hermes-agent\venv\Scripts\python.exe" `
+  ".\scripts\test_tool_call.py"
 ```
 
-成功时应看到类似：
+成功时应看到：
 
 ```text
 Finish reason: tool_calls
 PASS: Structured tool calling works.
 ```
 
-最后，在 Hermes `hermes model` 中配置：
+然后配置 Hermes：
 
 ```text
 Provider:              Custom endpoint
@@ -61,7 +77,11 @@ Context length:        81920
 Maximum output tokens: 16384
 ```
 
-包括 Python/CUDA 环境、TabbyAPI 配置以及最终 Hermes 文件工具集成测试在内的完整流程，请参阅安装指南。
+最后做真实 Agent 工具测试：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\test_hermes_tool.ps1
+```
 
 ---
 
@@ -71,36 +91,69 @@ Maximum output tokens: 16384
 
 [`docs/installation.zh-CN.md`](docs/installation.zh-CN.md)
 
-完整的 Windows 部署链路：
+完整 Windows 路线：
 
 ```text
-EXL3 模型
+EXL3 model
 → ExLlamaV3
 → TabbyAPI
 → structured tool_calls
 → Hermes Agent
 ```
 
-如果你是第一次搭建整套环境，从这里开始。
-
 ### 配置
 
 [`config/config.example.yml`](config/config.example.yml)
 
-当前经过实测的一套 TabbyAPI 配置包括：
+当前参考机器的 known-good memory 配置：
 
-- 81,920 token 上下文；
-- FP16 KV cache；
-- CPU MoE offloading；
-- 基于磁盘读取的 n-gram embeddings；
-- 2 GB 系统内存二级 KV cache；
-- `qwen3_coder` 工具调用解析。
+```yaml
+memory:
+  sysmem_recurrent_cache: 10240
+  sysmem_kv_cache: 4096
+  sysmem_multimodal_cache: 1024
+  cuda_malloc_async: true
+```
+
+其他关键设置：
+
+```text
+81,920-token context
+FP16 primary KV cache
+CPU MoE offloading
+NVMe-backed n-gram data
+qwen3_coder tool parsing
+```
+
+### Benchmark
+
+[`docs/benchmark.zh-CN.md`](docs/benchmark.zh-CN.md)
+
+不仅展示本机数据，也告诉你如何测试**自己的 OpenAI-compatible 本地模型**：
+
+- 8K / 16K / 32K / 64K prompt；
+- first-pass TTFT；
+- long-prompt ingestion；
+- decode throughput；
+- exact-prefix cache reuse；
+- recurrent/KV system-memory cache 调优；
+- 多次重复后报告 median。
+
+参考机器原始测量：
+
+[`benchmarks/rtx5070-12gb.csv`](benchmarks/rtx5070-12gb.csv)
+
+### 性能调优
+
+[`docs/tuning.zh-CN.md`](docs/tuning.zh-CN.md)
+
+包括 MoE offload、FP16/Q8 KV、recurrent cache、second-tier KV cache、context、`cuda_malloc_async`，以及一次只改变一个变量的调参方法。
 
 ### Tool-call 验证
 
 [`scripts/test_tool_call.py`](scripts/test_tool_call.py)
 
-该脚本验证：
+单独验证 serving layer：
 
 ```text
 OpenAI client
@@ -110,61 +163,48 @@ OpenAI client
 → structured OpenAI tool_calls
 ```
 
-它会**刻意绕过 Hermes**，从而可以独立判断“模型 + serving backend + tool parser”这一层是否已经正常工作。
+[`scripts/test_hermes_tool.ps1`](scripts/test_hermes_tool.ps1) 再用随机 UUID 文件验证 Hermes 真的执行了 file tool，而不是猜测答案。
 
 ### 故障排查
 
 [`docs/troubleshooting.zh-CN.md`](docs/troubleshooting.zh-CN.md)
 
-目前记录的常见问题包括：
-
-- localhost 请求被系统代理劫持；
-- `curl` 正常但 Python 请求失败；
-- 普通聊天正常，但 `tool_calls` 为空；
-- `uv` 把依赖安装进错误的 Python 环境；
-- 大体积 Torch wheel 下载时 TLS 中断；
-- Hermes context / `max_tokens` 冲突；
-- CPU MoE 与 KV cache 的 RAM / VRAM 行为。
+包括 localhost proxy、Python/OpenAI SDK 环境、普通文本而非 `tool_calls`、Torch/CUDA 安装、context budget、RAM/VRAM、recurrent/KV cache 和 allocator/OOM 问题。
 
 ---
 
-## 推荐的验证顺序
+## Benchmark 摘要
 
-不要一上来同时调试整个 Agent 链。
-
-建议按下面顺序逐层验证：
+参考机器：
 
 ```text
-GPU / CUDA
-    ↓
-Torch
-    ↓
-ExLlamaV3
-    ↓
-TabbyAPI 模型加载
-    ↓
-/v1/models
-    ↓
-scripts/test_tool_call.py
-    ↓
-Hermes 普通聊天
-    ↓
-Hermes 真实工具执行
+OS:          Windows 11
+CPU:         AMD Ryzen 9 9950X3D
+GPU:         NVIDIA GeForce RTX 5070 12 GB
+RAM:         96 GB
+Model:       Qwen3.8-Flash-Next EXL3 3.05 bpw
+Context:     81,920
+Primary KV:  FP16
 ```
 
-如果：
+当前 `10R / 4K / cudaMallocAsync=true` 实测：
 
-```text
-test_tool_call.py = PASS
-```
+| Prompt | First-pass TTFT | Cached-prefix TTFT | First-pass rate | Decode |
+|---:|---:|---:|---:|---:|
+| 32K | 33.248 s | 0.738 s | ~964 tok/s | ~21.1 tok/s |
+| 64K | 65.743 s | 0.964 s | ~974 tok/s | ~20.4 tok/s |
 
-但 Hermes 仍然无法真正执行工具，那么说明模型 serving 层已经基本正常，剩余问题更可能出在 Hermes 配置或 Agent loop。
+在更广泛的 cache 实验中，64K 首次 long-prompt ingestion 大体在 **0.9–1.0K tok/s**；完全相同 prefix 的 TTFT 可从约 **65–70 s** 降到约 **0.5–1.8 s**，具体取决于 cache 配置和运行状态。
+
+cached run 的 `prompt_tokens / TTFT` 不能当作真实物理 prefill throughput，只能理解成 effective cache-reuse rate。
+
+---
 
 ## 为什么会有这个仓库？
 
-模型可以通过 OpenAI-compatible 的 `/v1/chat/completions` 正常聊天，**并不等于**这个 server 已经支持 OpenAI-compatible tool calling。
+有一个 OpenAI-compatible `/v1/chat/completions` endpoint，**并不代表** serving backend 一定支持 OpenAI-compatible tool calling。
 
-一个最小化推理服务器可能正确处理：
+一个最小 server 可能只处理：
 
 ```text
 messages
@@ -172,7 +212,7 @@ messages
 → assistant content
 ```
 
-却忽略：
+却忽略或错误处理：
 
 ```text
 tools
@@ -180,23 +220,15 @@ tool_choice
 tool_calls
 ```
 
-在我们最初的部署里，Qwen3.8-Flash-Next 在 reasoning 中已经能够判断“这里应该调用工具”，但 Hermes 最终显示：
+我们最初就遇到过：模型知道应该调用工具，但 Hermes 仍然得到 0 tool calls。问题不在模型本身，而在 serving layer。
 
-```text
-0 tool calls
-```
-
-问题并不在模型本身。
-
-缺失的是中间的 serving / protocol 层。
-
-使用 TabbyAPI，并配置：
+TabbyAPI 配合：
 
 ```yaml
 tool_format: qwen3_coder
 ```
 
-之后，完整链路变成：
+完整路径变成：
 
 ```text
 Hermes Agent
@@ -217,62 +249,83 @@ TabbyAPI parser
    ↓
 OpenAI tool_calls
    ↓
-Hermes 执行工具
+Hermes executes the tool
 ```
 
-## 已验证环境
-
-本仓库中的配置已经在以下环境中实际跑通：
-
-```text
-OS:          Windows 11
-CPU:         AMD Ryzen 9 9950X3D
-GPU:         NVIDIA GPU，12 GB VRAM
-RAM:         96 GB
-Model:       Qwen3.8-Flash-Next EXL3 3.05 bpw
-Inference:   ExLlamaV3
-API server:  TabbyAPI
-Agent:       Hermes Agent
-```
-
-这是一个**经过验证的配置**，并不代表最低硬件要求。
+---
 
 ## 内存策略
 
-这套部署使用的是异构内存，而不是试图把完整模型全部塞进显存：
+这套方案使用异构内存，而不是试图把完整模型和全部 runtime state 都塞进 VRAM：
 
 ```text
 GPU VRAM
-├── GPU 常驻模型组件
+├── GPU-resident model components
 ├── attention compute
-├── active KV cache
+├── active / primary KV state
 └── runtime buffers
 
 System RAM
 ├── CPU-offloaded MoE experts
-└── second-tier KV cache
+├── recurrent cache
+├── second-tier KV cache
+└── runtime / OS memory
 
 NVMe SSD
-└── Qwen3.8-Flash-Next n-gram embedding table
+└── n-gram embedding data
 ```
 
-当前实测配置：
+当前 reference：
 
 ```yaml
-max_seq_len: 81920
-cache_size: 81920
-cache_mode: FP16
+model:
+  max_seq_len: 81920
+  cache_size: 81920
+  cache_mode: FP16
 
-cpu_moe_offload_layers: 999
-ngram_ram: false
+  cpu_moe_offload_layers: 999
+  ngram_ram: false
 
 memory:
-   sysmem_kv_cache: 2048
+  sysmem_recurrent_cache: 10240
+  sysmem_kv_cache: 4096
+  sysmem_multimodal_cache: 1024
+  cuda_malloc_async: true
 ```
 
-在本次测试使用的 12 GB GPU 上，模型加载完成后的 dedicated GPU memory 静态占用约为 **10.5 GB**。
+`sysmem_recurrent_cache` 和 `sysmem_kv_cache` 是两个不同的控制项，应该分开 benchmark。更大并不保证更快，而且最佳结果可能随 context length 改变。
 
-实际内存和显存占用会受到 GPU 驱动、CUDA runtime、ExLlamaV3 版本以及模型量化方式等因素影响。
+示例 API 绑定在 `127.0.0.1` 且关闭 authentication。**不要把无认证 endpoint 暴露到 `0.0.0.0` 或公网。**
+
+---
+
+## 推荐验证顺序
+
+不要一次 debug 整个 Agent stack：
+
+```text
+GPU / CUDA
+    ↓
+Torch
+    ↓
+ExLlamaV3
+    ↓
+TabbyAPI model loading
+    ↓
+/v1/models
+    ↓
+scripts/test_tool_call.py
+    ↓
+Hermes normal chat
+    ↓
+scripts/test_hermes_tool.ps1
+    ↓
+long-context benchmark
+```
+
+如果 `test_tool_call.py` PASS，但 Hermes 仍不能执行工具，那么 serving layer 已经工作，应重点检查 Hermes 配置和 Agent loop。
+
+---
 
 ## 仓库结构
 
@@ -282,58 +335,65 @@ memory:
 ├── README.zh-CN.md
 ├── LICENSE
 ├── .gitignore
+│
 ├── config/
 │   └── config.example.yml
+│
 ├── scripts/
-│   └── test_tool_call.py
+│   ├── benchmark_chat.py
+│   ├── test_tool_call.py
+│   └── test_hermes_tool.ps1
+│
+├── benchmarks/
+│   └── rtx5070-12gb.csv
+│
 └── docs/
     ├── installation.md
     ├── installation.zh-CN.md
+    ├── benchmark.md
+    ├── benchmark.zh-CN.md
+    ├── tuning.md
+    ├── tuning.zh-CN.md
     ├── troubleshooting.md
     └── troubleshooting.zh-CN.md
 ```
 
-## 当前状态
-
-目前已经验证：
-
-- Qwen3.8-Flash-Next EXL3 推理；
-- 81,920 token 上下文；
-- FP16 KV cache；
-- CPU MoE expert offloading；
-- 系统内存二级 KV cache；
-- OpenAI-compatible `/v1/chat/completions`；
-- 结构化 OpenAI `tool_calls`；
-- `qwen3_coder` tool-call parsing；
-- Hermes Agent 集成。
+---
 
 ## 最重要的经验
 
-**模型具备工具调用能力、serving 层支持结构化 tool calling、Agent 能够真正执行工具，是三件不同的事情。**
-
-模型完全可能知道“这里应该调用某个工具”，但 serving backend 最终仍然只返回普通文本。
-
-一个真正可用的 Agent loop，至少需要三层全部打通：
+**模型会不会 tool calling、serving backend 会不会返回结构化 tool call、Agent 会不会真正执行工具，是三个不同的问题。**
 
 ```text
 Model
-→ 生成正确的 tool-call 格式
+→ 生成正确的 tool-call format
 
 Serving backend
-→ 注入工具 schema，并解析模型输出
+→ 注入 tool schema 并解析模型输出
 
 Agent
-→ 真正执行工具，并把结果返回给模型
+→ 执行工具并把结果返回给模型
 ```
+
+---
+
+## Upstream 与 Credits
+
+本仓库是 integration/deployment recipe，不替代也不重新授权上游项目。
+
+- Qwen3.8-Flash-Next — Qwen team
+- Qwen3.8-Flash-Next EXL3 quantization — turboderp
+- ExLlamaV3 — turboderp
+- TabbyAPI — theroyallab
+- Hermes Agent — Nous Research
+- `flash-next-8gb` — lna-lab；其异构内存部署工作为本路线提供了有价值的背景参考
+
+本仓库代码/文档使用 [`LICENSE`](LICENSE) 中的许可；模型权重和上游软件遵循各自许可。
+
+---
 
 ## 项目范围
 
-本仓库聚焦于一条可复现的 **Windows + 消费级 NVIDIA GPU** 部署路径：使用 Qwen3.8-Flash-Next EXL3 作为 Hermes Agent 的本地推理后端。
+本仓库关注 Windows + 消费级 NVIDIA GPU 上，Qwen3.8-Flash-Next EXL3 作为 Hermes Agent 本地后端的一条可复现部署路线。
 
-本仓库不是 TabbyAPI、ExLlamaV3、Qwen 或 Hermes 的替代品，而是记录这些项目如何在一个实际环境中组合使用，重点关注：
-
-- 结构化工具调用；
-- OpenAI-compatible Agent protocol；
-- 低显存条件下的异构推理。
-
-不同硬件上的最低要求和最优 cache / offload 参数可能不同。
+重点是 structured tool calling、heterogeneous memory、长上下文运行和可复现 benchmark。不同硬件上的最优 cache/offload 参数会不同。
