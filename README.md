@@ -130,6 +130,7 @@ Actual memory consumption depends on the GPU driver, CUDA runtime, ExLlamaV3 ver
 ```
 ## Status
 Currently validated:
+
 \* Qwen3.8-Flash-Next EXL3 inference
 
 \* 81,920-token context configuration
@@ -142,16 +143,16 @@ Currently validated:
 
 \* OpenAI-compatible `/v1/chat/completions`
 
-\* structured OpenAI `tool\_calls`
+\* structured OpenAI `tool_calls`
 
-\* `qwen3\_coder` tool-call parsing
+\* `qwen3_coder` tool-call parsing
 
 \* Hermes Agent integration
 
 
 ## Key lesson
 
-\*\*Model tool-calling capability, serving-layer tool-call support, and agent tool execution are three different things.\*\*
+**Model tool-calling capability, serving-layer tool-call support, and agent tool execution are three different things.**
 
 A model can know that it should call a tool while the serving backend still returns only ordinary text.
 
