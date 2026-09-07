@@ -81,6 +81,8 @@ Maximum output tokens: 16384
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\test_hermes_tool.ps1
+# or
+Unblock-File .\scripts\test_hermes_tool.ps1
 ```
 
 ---
